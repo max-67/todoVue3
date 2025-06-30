@@ -13,6 +13,12 @@ npm install
 ```bash
 npm i
 ```
+
+## Запуск проекта
+```bash
+npm run dev
+```
+
 ## Сборка проекта
 ```bash
 npm run build
