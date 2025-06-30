@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#app {
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  text-align: center;
+  height: 100vh;
+  width: 100vw;
+}
