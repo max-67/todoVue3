@@ -12,14 +12,14 @@
       <div class="flex gap-2">
         <select
           v-model="task.status"
-          @change="updateTimestamp()"
-          class="px-2 py-[0.25rem] max-w-[120px] text-gray-400 focus-visible:outline-none text-right"
+          @change="handleUpdateTimestamp()"
+          class="px-2 py-[0.25rem] max-w-[120px] text-gray-400 focus-visible:outline-none text-right cursor-pointer"
         >
           <option v-for="tag in availableStatuses" :value=tag >{{ tag }}</option>
         </select>
         <!-- Удаление задачи -->
         <button
-          @click="removeTask()"
+          @click="handleRemoveTask()"
           class="text-red-500 hover:text-red-700 ml-auto cursor-pointer"
           title="Удалить задачу"
         >
@@ -34,7 +34,7 @@
       </span>
       <div v-else>
         <input v-model="editTitle" type="text" ref="editTitleInput">
-        <button @click="saveNewTitle()" class="text-green-500 cursor-pointer text-base hover:text-green-600 mr-2 ml-1">✓</button>
+        <button @click="handleSaveNewTitle()" class="text-green-500 cursor-pointer text-base hover:text-green-600 mr-2 ml-1">✓</button>
         <button @click="cancelEditTitle()" class="text-red-500 cursor-pointer text-lg hover:text-red-600">×</button>
       </div>
     </div>
@@ -42,7 +42,7 @@
     <!-- Теги -->
     <div class="mb-2 flex flex-wrap gap-x-[0.5rem] gap-y-[0.25rem] text-sm text-gray-600">
       <span v-for="tag in task.tags" :key="tag" class="bg-gray-200 px-[0.5rem] py-[0.15rem] rounded-full">
-        {{ tag }} <button class="hover:font-bold cursor-pointer text-red-400 text-xs" style="font-size: 12px;" @click="removeTagFromTask(tag)">✕</button>
+        {{ tag }} <button class="hover:font-bold cursor-pointer text-red-400 text-xs" style="font-size: 12px;" @click="handleRemoveTagFromTask(tag)">✕</button>
       </span>
       <span @click="getAddTag()" class="bg-gray-200 px-[8px] py-[2px] rounded-full flex items-center h-[24px] hover:bg-gray-300 cursor-pointer">
         <template v-if="!isAddTag">
@@ -50,7 +50,7 @@
         </template>
         <template v-else>
           <input ref="editTagInput" type="text" class="w-[50px] h-[20px]" v-model="addTagText">
-          <button @click="addTag($event)" class="text-green-500 cursor-pointer text-base hover:text-green-600 mr-2 ml-1">✓</button>
+          <button @click="handleAddTag($event)" class="text-green-500 cursor-pointer text-base hover:text-green-600 mr-2 ml-1">✓</button>
           <button @click="cancelAddTag($event)" class="text-red-500 cursor-pointer text-lg hover:text-red-600">×</button>
         </template>
       </span>
@@ -76,14 +76,13 @@
         v-model="newSubtaskTitle"
         type=text
         placeholder="Подзадача..."
-        @keydown.enter.prevent="$emit('addSubtask', task.id)"
+        @keydown.enter.prevent=handleAddSubtask
         @input="(e) => newSubtaskTitle = (e.target as HTMLInputElement).value"
         ref="'subInput-' + task.id"
         :ref="'subInput-' + task.id"
-        @keyup.enter="$emit('addSubtask', task.id)"
       />
       <button
-        @click="addSubtask()"
+        @click="handleAddSubtask()"
         class='ml-auto px=2 py=1 bg-gray=300 rounded cursor-pointer text-2xl text-green-600 hover:text-green-700'
       >
         +
@@ -93,7 +92,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, nextTick } from 'vue';
+  import { ref, nextTick, inject } from 'vue';
   import { ITask } from './../types/types.ts';
 
   const props = defineProps<{
@@ -101,15 +100,6 @@
     availableStatuses: string[],
     projectId: string
   }>();
-
-  const emit = defineEmits([
-    'removeTask', 
-    'addSubtask', 
-    'updateTimestamp', 
-    'removeTagFromTask', 
-    'addTag', 
-    'saveNewTitle'
-  ]);
 
   const editTitleInput = ref<HTMLInputElement | null>(null);
   const newSubtaskTitle = ref<string>('');
@@ -121,46 +111,70 @@
   const isEditTitle = ref<boolean>(false);
   const editTitle = ref<string>('');
 
+
+  /**
+   * Внедряет функцию сохранения нового наименование задачи.
+   */
+  const saveNewTitle = inject<(newTitle: string, taskId: string, projectId:string) => void>('saveNewTitle');
+
   /**
    * Сохранение нового наименования задачи.
    */
-  const saveNewTitle = (): void => {
-    emit('saveNewTitle', editTitle, props.task.id);
+  const handleSaveNewTitle = (): void => {
+    saveNewTitle?.(editTitle.value, props.task.id, props.projectId);
     isEditTitle.value = false;
   }
 
+  const addSubtask = inject<(projectId: string, taskId: string, newSubtaskTitle: string) => void>('addSubtask');
+ 
   /**
    *  Добавление подзадачи к задаче внутри проекта.
    */
-  const addSubtask = (): void => {
-    emit('addSubtask', props.task.id, newSubtaskTitle.value);
+  const handleAddSubtask = (): void => {
+    addSubtask?.(props.projectId, props.task.id, newSubtaskTitle.value);
     newSubtaskTitle.value = '';
   }
+
+  /**
+   * Внедряет функцию по удалению тэга из задачи.
+   */
+  const removeTagFromTask = inject<(tag: string, taskId: string, projectId: string) => void>('removeTagFromTask');
 
   /**
    * Удаление тэга из задачи.
    * @param tag Тэг.
    */
-  const removeTagFromTask = (tag: string): void => {
-    emit('removeTagFromTask', tag, props.task.id);
+  const handleRemoveTagFromTask = (tag: string): void => {
+    if (!confirm('Вы действительно хотите удалить тэг?')) {
+      return;
+    }
+    removeTagFromTask?.(tag, props.task.id, props.projectId);
   }
+
+  /**
+   * Внедряет функцию по удалению задачи.
+   */
+   const removeTask = inject<(projectId: string, taskId: string) => void>('removeTask');
 
   /**
    * Удаление задачи из проекта.
    */
-  const removeTask = (): void => {
-    if (confirm('Вы действительно хотите удалить задачу?')) {
-      emit('removeTask', props.task.id);
+  const handleRemoveTask = (): void => {
+    if (!confirm('Вы действительно хотите удалить задачу?')) {
+      return;
     }
+    removeTask?.(props.projectId, props.task.id);
   }
+
+  const addTag = inject<(tag: string, taskId: string, projectId: string) => void>('addTag');
 
   /**
    * Добавление нового тэга к задаче.
    * @param e Событие.
    */
-  const addTag = (e: Event): void => {
+  const handleAddTag = (e: Event): void => {
     e.stopPropagation();
-    emit('addTag', addTagText.value, props.task.id);
+    addTag?.(addTagText.value, props.task.id, props.projectId);
     isAddTag.value = false;
   }
 
@@ -207,10 +221,15 @@
   }
 
   /**
+   * Внедряет функцию обновления времени.
+   */
+  const updateTimestamp = inject<(projectId: string, taskId: string, date: Date) => void>('updateTimestamp');
+
+  /**
    * Обновление времени при смене статуса задачи.
    */
-  const updateTimestamp = (): void => {
-    emit('updateTimestamp', new Date(), props.task.id);
+  const handleUpdateTimestamp = (): void => {
+    updateTimestamp?.(props.projectId, props.task.id, new Date);
   }
 
   /**

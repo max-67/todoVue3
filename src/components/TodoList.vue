@@ -57,20 +57,14 @@
         :project="project"
         :availableStatuses="availableStatuses"
         @removeProject="removeProject"
-        @removeTask="removeTask"
-        @addSubtask="addSubtask"
         @addTask="addTask"
-        @updateTimestamp="updateTimestamp"
-        @removeTagFromTask="removeTagFromTask"
-        @addTag="addTag"
-        @saveNewTitle="saveNewTitle"
       />
     </div>
   </div>
 </template>
 
 <script setup lang='ts'>
-  import { ref, Ref,  watch, computed } from 'vue';
+  import { ref, Ref,  watch, computed, provide } from 'vue';
   import CryptoJS from 'crypto-js';
   import DropDown from './DropDown.vue';
   import { ITask, IProject, ISettings } from './../types/types.ts';
@@ -103,6 +97,8 @@
     project.tasks = project.tasks.filter(t => t.id !== taskId);
   }
 
+  provide('removeTask', removeTask);
+
   /**
    * Удаление тэга по его имени из задачи.
    * @param tag Текст тэга.
@@ -119,6 +115,8 @@
     task.tags.splice(task.tags.indexOf(tag), 1);
   }
 
+  provide('removeTagFromTask', removeTagFromTask);
+
   /**
    * Изменение наименования задачи.
    * @param newTitle Новое наименование задачи.
@@ -134,6 +132,8 @@
 
     task.title = newTitle;
   }
+
+  provide('saveNewTitle', saveNewTitle);
 
   /**
    * Добавление подзадачи к задаче внутри проекта по id проекта и задачи
@@ -161,6 +161,8 @@
     // Добавляем подзадачу к текущей задаче 
     task.subtasks.push(subtask);
   }
+
+  provide('addSubtask', addSubtask);
 
   /**
    * Добавление задачи в проект по id проекта.
@@ -202,6 +204,8 @@
 
     task.tags.push(tag);
   }
+
+  provide('addTag', addTag);
 
   /**
    * Получение доступных статусов задач.
@@ -415,6 +419,8 @@
      if (task) task.updatedAt = date;
     }
   }
+
+  provide('updateTimestamp', updateTimestamp);
 
   /**
    * Вычисляемое свойство для фильтрации проектов.

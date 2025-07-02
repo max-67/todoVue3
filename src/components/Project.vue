@@ -71,12 +71,6 @@
         :task="task"
         :availableStatuses="availableStatuses"
         :projectId="project.id"
-        @removeTask="removeTask"
-        @updateTimestamp="updateTimestamp"
-        @addSubtask="addSubtask"
-        @removeTagFromTask="removeTagFromTask"
-        @addTag="addNewTag"
-        @saveNewTitle="saveNewTitle"
       />
     </div>
   </div>
@@ -93,14 +87,8 @@
   }>();
 
   const emit = defineEmits([
-    'removeProject', 
-    'removeTask', 
-    'addSubtask', 
-    'addTask', 
-    'updateTimestamp', 
-    'removeTagFromTask',
-    'addTag',
-    'saveNewTitle'
+    'removeProject',
+    'addTask',
   ]);
 
   const showNewTask = ref<string>('');
@@ -120,35 +108,6 @@
   }
 
   /**
-   * Обновление наименования задачи.
-   * @param newTitle Новое наименование задачи.
-   * @param taskId Идентификатор задачи.
-   */
-  const saveNewTitle = (newTitle: string,taskId: string): void => {
-    emit('saveNewTitle', newTitle, taskId, props.project.id);
-  }
-
-  /**
-   * Добавление нового тэга.
-   * @param tag Тэг.
-   * @param taskId Идентификатор задачи.
-   */
-  const addNewTag = (tag: string, taskId: string): void => {
-    emit('addTag', tag, taskId, props.project.id);
-  }
-
-  /**
-   * Удаление тэга из задачи.
-   * @param tag Тэг.
-   * @param taskId Идентификатор задачи. 
-   */
-  const removeTagFromTask = (tag: string, taskId: string): void => {
-    if (confirm('Вы действительно хотите удалить тэг?')) {
-      emit('removeTagFromTask', tag, taskId, props.project.id);
-    }
-  }
-
-  /**
    * Удаление проекта.
    * @param projectId Идентифкатор проекта.
    */
@@ -159,38 +118,12 @@
   }
 
   /**
-   * Добавление подзадачи к задаче внутри проекта.
-   * @param taskId Идентификатор задачи.
-   * @param newSubtaskTitle Наименование новой подзадачи.
-   */
-  const addSubtask = (taskId: string, newSubtaskTitle: string): void => {
-    emit('addSubtask', props.project.id, taskId, newSubtaskTitle);
-  }
-
-  /**
    * Добавление задачи в проект.
    */
   const addTask = (): void => {
     emit('addTask', props.project.id, newTaskTitle.value, newTaskStatus.value, newTaskTags.value);
     showNewTask.value = '';
     newTaskTitle.value = '';
-  }
-
-  /**
-   * Удаление задачи из проекта.
-   * @param taskId Идентификатор задачи.
-   */
-  const removeTask = (taskId: string): void => {
-    emit('removeTask', props.project.id, taskId);
-  }
-
-  /**
-   * Обновление времени при смене статуса.
-   * @param date Дата.
-   * @param taskId Идентификатор задачи.
-   */
-  const updateTimestamp = (date: Date, taskId: string): void => {
-    emit('updateTimestamp', props.project.id, taskId, date);
   }
 
   /**
