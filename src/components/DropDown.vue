@@ -3,10 +3,12 @@
     <!-- Кнопка -->
     <button
       @click="isOpen = !isOpen"
-      class="w-full text-gray-400 border px-2 border-gray-300 rounded h-[40px] text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:text-gray-600"
+      class="w-full text-gray-400 border px-2 border-gray-300 rounded h-[40px] text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:text-gray-600"
     >
-      {{ selectedItems.length > 0 ? selectedItems.join(', ') : text }}
-      <span class="float-right">▼</span>
+      <div class="whitespace-nowrap flex justify-between">
+        <div class="overflow-x-auto">{{ selectedItems.length > 0 ? selectedItems.join(', ') : text }}</div>
+        <div class="float-right">▼</div>
+      </div>
     </button>
 
     <!-- Выпадающий список -->

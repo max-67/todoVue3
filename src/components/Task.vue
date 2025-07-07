@@ -27,15 +27,15 @@
         </button>
       </div>
     </div>
-    <div class="text-left">
+    <div class="text-left mb-2">
       <!-- Название задачи -->
-      <span v-if="!editTitle.isEditTitle" :class="{ 'line-through text-gray-500': task.status === 'done' }" @click="getEditTitle()">
+      <div v-if="!editTitle.isEditTitle" class="h-[24px]" :class="{ 'line-through text-gray-500': task.status === 'done' }" @click="getEditTitle()">
         {{ task.title }}
-      </span>
+      </div>
       <div v-else>
-        <input v-model="editTitle.title" type="text" ref="editTitleInput">
+        <input v-model="editTitle.title" class="" type="text" ref="editTitleInput">
         <button @click="handleSaveNewTitle()" class="text-green-500 cursor-pointer text-base hover:text-green-600 mr-2 ml-1">✓</button>
-        <button @click="cancelEditTitle()" class="text-red-500 cursor-pointer text-lg hover:text-red-600">×</button>
+        <button @click="cancelEditTitle()" class="text-red-500 cursor-pointer text-base hover:text-red-600">×</button>
       </div>
     </div>
 
@@ -49,7 +49,7 @@
           <button  class="cursor-pointer">+</button>
         </template>
         <template v-else>
-          <input ref="editTagInput" type="text" class="w-[50px] h-[20px]" v-model="editTag.text">
+          <input maxlength="34" ref="editTagInput" type="text" class="w-[50px] h-[20px]" v-model="editTag.text">
           <button @click="handleAddTag($event)" class="text-green-500 cursor-pointer text-base hover:text-green-600 mr-2 ml-1">✓</button>
           <button @click="cancelAddTag($event)" class="text-red-500 cursor-pointer text-lg hover:text-red-600">×</button>
         </template>

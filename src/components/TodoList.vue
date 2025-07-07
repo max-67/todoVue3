@@ -1,47 +1,44 @@
 <template>
   <div class=" bg-gray-100 p-4 flex flex-col items-center w-full">
     <h1 class="text-3xl font-bold mb-6">Проектная доска</h1>
-    <div class="flex flex-col gap-2 w-max-[400px]">
-      <div class="flex gap-1 flex-wrap">
-        <!-- Форма добавления проекта -->
-        <div class="flex flex-col border border-gray-400 p-4 pt-3 rounded-2xl">
-          <h3 class="text-xl font-semibold text-gray-800 mb-2">Новый проект</h3>
-          <div class="">
-            <div class="flex space-x-1 justify-center">
-              <input
-                v-model="newProjectName"
-                type="text"
-                placeholder="Название проекта"
-                class="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-              <button
-                @click="addProject"
-                class="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 cursor-pointer"
-              >
-                Создать
-              </button>
-            </div>
-          </div>
-        </div>
-
-
-        <!-- Импорт\экспорт -->
-        <div class="flex flex-col border border-gray-400 p-4 pt-3 rounded-2xl">
-          <h3 class="text-xl font-semibold text-gray-800 mb-2">Импорт / экспорт</h3>
-          <div class="flex gap-1 justify-center">
-            <button @click="exportToToken()" class="px-4 bg-blue-300 text-black rounded hover:bg-blue-400 cursor-pointer">Экспорт</button>
-            <label class="cursor-pointer inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-              Импорт
-              <input @change="importFromToken($event)" type="file" class="hidden" />
-            </label>
+    <div class="grid grid-cols-6 gap-2 w-[700px]">
+      <!-- Форма добавления проекта -->
+      <div class="col-span-4 flex flex-col border border-gray-400 p-4 pt-3 rounded-2xl">
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">Новый проект</h3>
+        <div class="">
+          <div class="flex space-x-1 justify-center">
+            <input
+              v-model="newProjectName"
+              type="text"
+              placeholder="Название проекта"
+              class="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            <button
+              @click="addProject"
+              class="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 cursor-pointer"
+            >
+              Создать
+            </button>
           </div>
         </div>
       </div>
 
+      <!-- Импорт\экспорт -->
+      <div class="col-span-2 flex flex-col border border-gray-400 p-4 pt-3 rounded-2xl">
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">Импорт / экспорт</h3>
+        <div class="flex gap-1 justify-center">
+          <button @click="exportToToken()" class="px-4 bg-blue-300 text-black rounded hover:bg-blue-400 cursor-pointer">Экспорт</button>
+          <label class="cursor-pointer inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Импорт
+            <input @change="importFromToken($event)" type="file" class="hidden" />
+          </label>
+        </div>
+      </div>
+
       <!-- Фильтрация и поиск -->
-      <div class="w-full flex flex-col border border-gray-400 p-4 pt-3 rounded-2xl">
+      <div class="col-span-6 w-full flex flex-col border border-gray-400 p-4 pt-3 rounded-2xl">
         <h3 class="text-xl font-semibold text-gray-800 mb-2">Фильтрация</h3>
-        <div class="flex gap-1">
+        <div class="grid grid-cols-3 gap-1">
           <input v-model="filters.search" class="text-gray-400 w-full border px-2 border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 focus:text-gray-600" type="text" placeholder="Поиск...">
           <DropDown class="w-full" text="Тэги" :items=availableTags @update="changeTags" />
           <DropDown class="w-full" text="Статусы" :items=availableStatuses @update="changeStatus" />
