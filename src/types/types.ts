@@ -24,3 +24,19 @@ export interface ISettings {
   projects: IProject[],
   filters: ISettingsFilters
 }
+
+export interface IEditTag {
+  isAddTag: boolean,
+  text: string
+}
+
+export interface IEditTitle {
+  isEditTitle: boolean
+  title: string
+}
+
+export interface IFilter {
+  search: string,
+  selectedTags: string[],
+  selectedStatuses: string[]
+}

@@ -29,11 +29,11 @@
     </div>
     <div class="text-left">
       <!-- Название задачи -->
-      <span v-if="!isEditTitle" :class="{ 'line-through text-gray-500': task.status === 'done' }" @click="getEditTitle()">
+      <span v-if="!editTitle.isEditTitle" :class="{ 'line-through text-gray-500': task.status === 'done' }" @click="getEditTitle()">
         {{ task.title }}
       </span>
       <div v-else>
-        <input v-model="editTitle" type="text" ref="editTitleInput">
+        <input v-model="editTitle.title" type="text" ref="editTitleInput">
         <button @click="handleSaveNewTitle()" class="text-green-500 cursor-pointer text-base hover:text-green-600 mr-2 ml-1">✓</button>
         <button @click="cancelEditTitle()" class="text-red-500 cursor-pointer text-lg hover:text-red-600">×</button>
       </div>
@@ -45,11 +45,11 @@
         {{ tag }} <button class="hover:font-bold cursor-pointer text-red-400 text-xs" style="font-size: 12px;" @click="handleRemoveTagFromTask(tag)">✕</button>
       </span>
       <span @click="getAddTag()" class="bg-gray-200 px-[8px] py-[2px] rounded-full flex items-center h-[24px] hover:bg-gray-300 cursor-pointer">
-        <template v-if="!isAddTag">
+        <template v-if="!editTag.isAddTag">
           <button  class="cursor-pointer">+</button>
         </template>
         <template v-else>
-          <input ref="editTagInput" type="text" class="w-[50px] h-[20px]" v-model="addTagText">
+          <input ref="editTagInput" type="text" class="w-[50px] h-[20px]" v-model="editTag.text">
           <button @click="handleAddTag($event)" class="text-green-500 cursor-pointer text-base hover:text-green-600 mr-2 ml-1">✓</button>
           <button @click="cancelAddTag($event)" class="text-red-500 cursor-pointer text-lg hover:text-red-600">×</button>
         </template>
@@ -92,8 +92,8 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, nextTick, inject } from 'vue';
-  import { ITask } from './../types/types.ts';
+  import { ref, nextTick, inject, reactive } from 'vue';
+  import { ITask, IEditTag, IEditTitle } from './../types/types.ts';
 
   const props = defineProps<{
     task: ITask,
@@ -102,15 +102,18 @@
   }>();
 
   const editTitleInput = ref<HTMLInputElement | null>(null);
-  const newSubtaskTitle = ref<string>('');
+  const editTitle = reactive<IEditTitle>({
+    isEditTitle: false,
+    title: ''
+  });
 
   const editTagInput = ref<HTMLInputElement | null>(null);
-  const isAddTag = ref<boolean>(false);
-  const addTagText = ref<string>('');
-
-  const isEditTitle = ref<boolean>(false);
-  const editTitle = ref<string>('');
-
+  const editTag = reactive<IEditTag>({
+    isAddTag: false,
+    text: ''
+  });
+  
+  const newSubtaskTitle = ref<string>('');
 
   /**
    * Внедряет функцию сохранения нового наименование задачи.
@@ -121,8 +124,8 @@
    * Сохранение нового наименования задачи.
    */
   const handleSaveNewTitle = (): void => {
-    saveNewTitle?.(editTitle.value, props.task.id, props.projectId);
-    isEditTitle.value = false;
+    saveNewTitle?.(editTitle.title, props.task.id, props.projectId);
+    editTitle.isEditTitle = false;
   }
 
   const addSubtask = inject<(projectId: string, taskId: string, newSubtaskTitle: string) => void>('addSubtask');
@@ -174,8 +177,8 @@
    */
   const handleAddTag = (e: Event): void => {
     e.stopPropagation();
-    addTag?.(addTagText.value, props.task.id, props.projectId);
-    isAddTag.value = false;
+    addTag?.(editTag.text, props.task.id, props.projectId);
+    editTag.isAddTag = false;
   }
 
   /**
@@ -184,15 +187,15 @@
    */
   const cancelAddTag = (e: Event): void => {
     e.stopPropagation();
-    isAddTag.value = false;
+    editTag.isAddTag = false;
   }
 
   /**
    * Редактирование нового тэга для задачи.
    */
   const getAddTag = (): void => {
-    addTagText.value = '';
-    isAddTag.value = true;
+    editTag.text = '';
+    editTag.isAddTag = true;
     nextTick(() => {
       if (editTagInput.value) {
           editTagInput.value.focus();
@@ -204,9 +207,10 @@
    *  Редактирование заголовка задачи. 
    */
   const getEditTitle = (): void => {
-    editTitle.value = props.task.title;
-    isEditTitle.value = true;
+    editTitle.title = props.task.title;
+    editTitle.isEditTitle = true;
     nextTick(() => {
+      console.log(editTitleInput)
       if (editTitleInput.value) {
           editTitleInput.value.focus();
         }
@@ -217,7 +221,7 @@
    * Отмена редактирования заголовка задачи.
    */
   const cancelEditTitle = (): void => {
-    isEditTitle.value = false;
+    editTitle.isEditTitle = false;
   }
 
   /**

@@ -42,7 +42,7 @@
       <div class="w-full flex flex-col border border-gray-400 p-4 pt-3 rounded-2xl">
         <h3 class="text-xl font-semibold text-gray-800 mb-2">Фильтрация</h3>
         <div class="flex gap-1">
-          <input v-model="search" class="text-gray-400 w-full border px-2 border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 focus:text-gray-600" type="text" placeholder="Поиск...">
+          <input v-model="filters.search" class="text-gray-400 w-full border px-2 border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 focus:text-gray-600" type="text" placeholder="Поиск...">
           <DropDown class="w-full" text="Тэги" :items=availableTags @update="changeTags" />
           <DropDown class="w-full" text="Статусы" :items=availableStatuses @update="changeStatus" />
         </div>
@@ -64,24 +64,27 @@
 </template>
 
 <script setup lang='ts'>
-  import { ref, Ref,  watch, computed, provide } from 'vue';
+  import { ref, Ref,  watch, computed, provide, reactive } from 'vue';
   import CryptoJS from 'crypto-js';
   import DropDown from './DropDown.vue';
-  import { ITask, IProject, ISettings } from './../types/types.ts';
+  import { ITask, IProject, ISettings, IFilter } from './../types/types.ts';
   import Project from './Project.vue';
 
+  // Фильтры и поиск.
+  const filters = reactive<IFilter>({
+    search: '',
+    selectedTags: [],
+    selectedStatuses: []
+  });
+
+  // Доступные тэги и статусы.
   const availableTags = ref<string[]>([]);
   const availableStatuses = ref<string[]>([]);
-
-  // Фильтры и поиск.
-  const search = ref<string>('');
-  const selectedTags = ref<string[]>([]);
-  const selectedStatuses = ref<string[]>([]);
 
   // Основной массив проектов.
   const projects = ref<IProject[]>([]);
 
-  // Для создания новых проектов и задач (просто для примера).
+  // Для создания новых проектов и задач.
   const newProjectName = ref<string>('');
   const showNewTask = ref<string>('');
 
@@ -171,19 +174,24 @@
    * @param taskStatus Статус задачи.
    * @param taskTags Тэги, прикрепленные к задаче.
    */
-  const addTask = (projectId: string, taskTitle: string, taskStatus: string, taskTags: string[]): void => {
+  const addTask = (projectId: string, task: ITask): void => {
+    const newTask = JSON.parse(JSON.stringify(task));
     const project: IProject | undefined = projects.value.find((p): boolean => p.id === projectId);
-    if (!project || !taskTitle.trim()) return;
+    if (!project || !newTask.title.trim()) return;
 
-    const newTask: ITask = {
-      id: Date.now().toString(),
-      title: taskTitle.trim(),
-      status: taskStatus,
-      tags: taskTags || [],
-      subtasks: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    newTask.id = Date.now().toString();
+    newTask.createdAt = new Date();
+    newTask.updatedAt = new Date();
+
+    // const newTask: ITask = {
+    //   id: Date.now().toString(),
+    //   title: taskTitle.trim(),
+    //   status: taskStatus,
+    //   tags: taskTags || [],
+    //   subtasks: [],
+    //   createdAt: new Date(),
+    //   updatedAt: new Date(),
+    // };
     project.tasks.unshift(newTask);
     
     showNewTask.value = '';
@@ -240,7 +248,7 @@
    * @param data Массив выбранных тэгов.
    */
   const changeTags = (data: Ref<string[]>): void => {
-    selectedTags.value = data.value;
+    filters.selectedTags = data.value;
   }
 
   /**
@@ -248,7 +256,7 @@
    * @param data Массив выбранных статусов.
    */
   const changeStatus = (data: Ref<string[]>): void => {
-    selectedStatuses.value = data.value;
+    filters.selectedStatuses = data.value;
   }
 
   /**
@@ -261,9 +269,9 @@
       const settings: ISettings = JSON.parse(stringSettings);
 
       projects.value = settings?.projects || [];
-      search.value = settings?.filters.search || '';
-      selectedStatuses.value = settings?.filters.statuses || [];
-      selectedTags.value = settings?.filters.tags || [];
+      filters.search = settings?.filters.search || '';
+      filters.selectedStatuses = settings?.filters.statuses || [];
+      filters.selectedTags = settings?.filters.tags || [];
       getAvailableTags();
     } catch (_) {
     }
@@ -276,9 +284,9 @@
     localStorage.setItem('todo_app_data', JSON.stringify({
       projects: projects.value,
       filters: {
-        statuses: selectedStatuses.value,
-        tags: selectedTags.value,
-        search: search.value
+        statuses: filters.selectedStatuses,
+        tags: filters.selectedTags,
+        search: filters.search
       }
     }));
   }
@@ -426,7 +434,7 @@
    * Вычисляемое свойство для фильтрации проектов.
    */
   const filteredProjects = computed<IProject[]>(() => {
-    const lowerSearch: string = search.value.toLowerCase();
+    const lowerSearch: string = filters.search.toLowerCase();
 
     return projects.value
       .map((project): IProject => {
@@ -437,13 +445,13 @@
 
           // 2. По тегам (если выбраны)
           const matchesTags: boolean =
-            selectedTags.value.length === 0 ||
-            task.tags.some(tag => selectedTags.value.includes(tag));
+            filters.selectedTags.length === 0 ||
+            task.tags.some(tag => filters.selectedTags.includes(tag));
 
           // 3. По статусу (если выбран)
           const matchesStatus: boolean =
-            selectedStatuses.value.length === 0 ||
-            selectedStatuses.value.includes(task.status);
+            filters.selectedStatuses.length === 0 ||
+            filters.selectedStatuses.includes(task.status);
           return matchesTitle && matchesTags && matchesStatus;
         });
         return {
@@ -456,9 +464,9 @@
   /**
    * Слежение за изменением проектов и фильтрации.
    */
-  watch([projects, search, selectedStatuses, selectedTags], () => {
-      updateLocalStorage();
-      getAvailableTags();
+  watch([projects, filters], () => {
+    updateLocalStorage();
+    getAvailableTags();
   }, { deep: true });
 
   loadFromLocalStorage();

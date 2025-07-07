@@ -20,7 +20,7 @@
     <div class="flex mb-4 relative">
       <input
         @focus="showCreateTask"
-        v-model="newTaskTitle"
+        v-model="newTask.title"
         type="text"
         placeholder="Новая задача..."
         class="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
@@ -30,12 +30,12 @@
       <div v-if="showNewTask === project.id" class="flex flex-col gap-2.5 p-2.5 bg-white z-70 absolute m-[-10px] rounded-[10px] overflow-hidden w-[388px] task-anim">
         <div class="h-[42px] flex-shrink-0"></div>
         <div>
-          <select v-model="newTaskStatus" class="w-full px-2 py-2 border border-gray-300 rounded bg-white" name="" id="">
+          <select v-model="newTask.status" class="w-full px-2 py-2 border border-gray-300 rounded bg-white" name="" id="">
             <option class="text-gray-200" :value="status" v-for="status of availableStatuses" :key="status" >{{status}}</option>
           </select>
         </div>
         <div class="flex flex-wrap gap-x-[0.5rem] gap-y-[0.25rem] text-sm text-gray-600">
-          <span v-for="tag in newTaskTags" :key="tag" class="mb-2 bg-gray-200 px-[0.5rem] py-[0.15rem] rounded-full">
+          <span v-for="tag in newTask.tags" :key="tag" class="mb-2 bg-gray-200 px-[0.5rem] py-[0.15rem] rounded-full">
             {{ tag }} <button class="hover:font-bold cursor-pointer text-red-400 text-xs" style="font-size: 12px;" @click="removeTagFromNewTask(tag)">✕</button>
           </span>
         </div>
@@ -77,8 +77,8 @@
 </template>
 
 <script setup lang="ts">
-  import { ref } from 'vue';
-  import { IProject } from './../types/types.ts';
+  import { reactive, ref } from 'vue';
+  import { IProject, ITask } from './../types/types.ts';
   import Task from './Task.vue';
 
   const props = defineProps<{
@@ -91,19 +91,39 @@
     'addTask',
   ]);
 
+  // Используется для новой задачи.
   const showNewTask = ref<string>('');
+  const newTask = reactive<ITask>({
+    id: '',
+    title: '',
+    status: 'todo',
+    tags: [],
+    subtasks: [],
+    createdAt: new Date(),
+    updatedAt: new Date()
+  });
 
-  // Используется для новой таски.
-  const newTaskTitle = ref<string>('');
-  const newTaskStatus = ref<string>('todo');
-  const newTaskTags = ref<string[]>([]);
+  // используется для нового тэга.
   const newTag = ref<string>('');
+
+  /**
+   * Очищение данных новой задачи.
+   */
+  const resetNewTask = () => {
+    newTask.id = '';
+    newTask.title = '';
+    newTask.status = 'todo';
+    newTask.tags = [];
+    newTask.subtasks = [];
+    newTask.createdAt = new Date();
+    newTask.updatedAt = new Date();
+  }
 
   /**
    * Скрытие формы создания новой задачи.
    */
   const hideCreateTask = (): void => {
-    newTaskTitle.value = '';
+    resetNewTask();
     showNewTask.value = '';
   }
 
@@ -121,9 +141,9 @@
    * Добавление задачи в проект.
    */
   const addTask = (): void => {
-    emit('addTask', props.project.id, newTaskTitle.value, newTaskStatus.value, newTaskTags.value);
+    emit('addTask', props.project.id, newTask);
     showNewTask.value = '';
-    newTaskTitle.value = '';
+    resetNewTask();
   }
 
   /**
@@ -131,7 +151,7 @@
    * @param tagValue Тэг.
    */
   const removeTagFromNewTask = (tagValue: string): void => {
-    newTaskTags.value.splice(newTaskTags.value.indexOf(tagValue), 1);
+    newTask.tags.splice(newTask.tags.indexOf(tagValue), 1);
   }
 
   /**
@@ -139,7 +159,7 @@
    */
   const showCreateTask = (): void => {
     if (showNewTask.value) return;
-    newTaskTags.value = [];
+    newTask.tags = [];
     newTag.value = '';
     showNewTask.value = props.project.id;
   }
@@ -148,7 +168,7 @@
    * Добавление нового тэга.
    */
   const addTag = (): void => {
-    newTaskTags.value.push(newTag.value);
+    newTask.tags.push(newTag.value);
     newTag.value = '';
   }
 </script>
