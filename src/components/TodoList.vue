@@ -1,9 +1,9 @@
 <template>
   <div class=" bg-gray-100 p-4 flex flex-col items-center w-full">
     <h1 class="text-3xl font-bold mb-6">Проектная доска</h1>
-    <div class="grid grid-cols-6 gap-2 w-[700px]">
+    <div class="grid grid-cols-6 gap-2 w-full md:w-[700px]">
       <!-- Форма добавления проекта -->
-      <div class="col-span-4 flex flex-col border border-gray-400 p-4 pt-3 rounded-2xl">
+      <div class="col-span-6 md:col-span-4 flex flex-col border border-gray-400 p-4 pt-3 rounded-2xl">
         <h3 class="text-xl font-semibold text-gray-800 mb-2">Новый проект</h3>
         <div class="">
           <div class="flex space-x-1 justify-center">
@@ -24,7 +24,7 @@
       </div>
 
       <!-- Импорт\экспорт -->
-      <div class="col-span-2 flex flex-col border border-gray-400 p-4 pt-3 rounded-2xl">
+      <div class="col-span-6 md:col-span-2 flex flex-col border border-gray-400 p-4 pt-3 rounded-2xl">
         <h3 class="text-xl font-semibold text-gray-800 mb-2">Импорт / экспорт</h3>
         <div class="flex gap-1 justify-center">
           <button @click="exportToToken()" class="px-4 bg-blue-300 text-black rounded hover:bg-blue-400 cursor-pointer">Экспорт</button>
@@ -327,9 +327,7 @@
       Array.isArray(obj.tags) && obj.tags.every((tag: any) => typeof tag === 'string') &&
       Array.isArray(obj.subtasks) && obj.subtasks.every(isTask) &&
       (obj.createdAt instanceof Date || (typeof obj.createdAt === 'string' && !isNaN(Date.parse(obj.createdAt)))) &&
-      (obj.updatedAt instanceof Date || (typeof obj.updatedAt === 'string' && !isNaN(Date.parse(obj.updatedAt)))) &&
-      // newSubtaskTitle — необязательное свойство
-      (typeof obj.newSubtaskTitle === 'undefined' || typeof obj.newSubtaskTitle === 'string')
+      (obj.updatedAt instanceof Date || (typeof obj.updatedAt === 'string' && !isNaN(Date.parse(obj.updatedAt))))
     );
   }
 
